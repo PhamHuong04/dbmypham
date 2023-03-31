@@ -1,11 +1,12 @@
 import {
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   Logger,
-  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AuthHelper } from 'src/common/helper/user.helper';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -16,6 +17,9 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
+    @Inject(AuthHelper)
+    private readonly helper: AuthHelper,
   ) {}
 
   private logger = new Logger('UserService');
@@ -33,6 +37,7 @@ export class UserService {
     this.logger.verbose(
       `New user in system with email is: ${createUserDto.email.toLowerCase()}`,
     );
+    createUserDto.password = this.helper.encodePassword(createUserDto.password);
     return this.userRepository.save(createUserDto);
   }
 
@@ -44,35 +49,27 @@ export class UserService {
     return users;
   }
 
-  findOne(id: number) {
-    return this.userRepository.findOne({
-      where: {
-        id,
-      },
-    });
+  async findOne(id: number) {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new HttpException('Not found user', HttpStatus.NOT_FOUND);
+    }
+    return user;
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    const user = await this.userRepository.findOne({
-      where: {
-        id,
-      },
-    });
+    const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException(`User with ID: ${id} not found`);
+      throw new HttpException('Not found user', HttpStatus.NOT_FOUND);
     }
-    await this.userRepository.update(id, updateUserDto);
+    await this.userRepository.update({ id }, updateUserDto);
     return `update successfully`;
   }
 
   async remove(id: number) {
-    const user = await this.userRepository.findOne({
-      where: {
-        id,
-      },
-    });
+    const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException(`User with ID: ${id} not found`);
+      throw new HttpException('Not found user', HttpStatus.NOT_FOUND);
     }
     await this.userRepository.delete(id);
     return `delete successfully`;

@@ -6,7 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { configEnvPath } from './common/helper/env.hepler';
 import { TypeOrmConfigSerivce } from './common/shared/typeorm/typeorm.service';
-import { HttpExceptionFilter } from './filter/http-exception.filter';
+import { HttpExceptionFilter } from './common/filter/http-exception.filter';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 
